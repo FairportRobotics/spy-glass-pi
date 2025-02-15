@@ -1,0 +1,5 @@
+red_robot
+blue_robot
+game_piece
+algae
+coral
