@@ -4,6 +4,4 @@
 
 `cd spy-glass-pi`
 
-`chmod +x setup.sh`
-
-`./setup.sh`
+`make all`
