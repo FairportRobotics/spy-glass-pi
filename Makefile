@@ -1,5 +1,6 @@
 setup:
-	sudo apt updatesudo apt full-upgrade
+	sudo apt update
+	sudo apt full-upgrade
 	sudo apt install imx500-all imx500-tools
 	sudo apt install python3-opencv python3-munkres
 	sudo reboot
