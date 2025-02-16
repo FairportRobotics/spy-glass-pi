@@ -3,7 +3,7 @@ setup:
 	sudo apt full-upgrade
 	sudo apt install imx500-all imx500-tools
 	sudo apt install python3-opencv python3-munkres
-	sudo reboot
+	echo "You might need to restart the raspberry pi by typing `sudo reboot`"
 picamera:setup
 	cd ~;\
 	git clone https://github.com/raspberrypi/picamera2;\
@@ -14,6 +14,6 @@ model:picamera
 run:model
 	python demo.py --model network.rpk --fps 25 --bbox-normalization --ignore-dash-labels --bbox-order xy --labels labels.txt
 all:model
-	echo "You spy glass model is ready!  Type `make run` to run a demonstration of it."
+	echo "You spy glass model is ready!  Type `make run` to run a demonstration."
 clean:
 	rm -fr network.rpk
