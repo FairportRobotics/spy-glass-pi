@@ -11,7 +11,9 @@ picamera:setup
 	pip install -e .  --break-system-packages
 model:picamera
 	imx500-package -i packerOut.zip -o .
-run:model
+reefscape:
+	imx500-package -i reefscape.zip -o .
+run:
 	python demo.py --model network.rpk --fps 25 --bbox-normalization --ignore-dash-labels --bbox-order xy --labels labels.txt
 all:model
 	@echo "You spy glass model is ready!"
