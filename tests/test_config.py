@@ -38,7 +38,21 @@ class SettingsTests(unittest.TestCase):
 
     def test_rejects_uninstalled_model(self):
         with self.assertRaisesRegex(SettingsError, "installed .rpk"):
+            validate_settings(Settings(model="outside.rpk"), self.models)
+
+    def test_rejects_model_path_instead_of_file_name(self):
+        with self.assertRaisesRegex(SettingsError, "name of an .rpk"):
             validate_settings(Settings(model="../outside.rpk"), self.models)
+
+    def test_loads_settings_when_selected_model_was_removed(self):
+        settings = Settings(team_number=578, model="removed.rpk")
+        self.settings_path.parent.mkdir()
+        self.settings_path.write_text(
+            json.dumps(settings.__dict__), encoding="utf-8"
+        )
+        self.assertEqual(load_settings(self.settings_path, self.models), settings)
+        with self.assertRaises(SettingsError):
+            save_settings(self.settings_path, self.models, settings)
 
     def test_rejects_invalid_threshold(self):
         with self.assertRaisesRegex(SettingsError, "Confidence"):

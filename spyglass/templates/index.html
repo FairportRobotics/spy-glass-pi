@@ -37,7 +37,7 @@
         <tr>
           <td>{{ target.label }}</td><td>{{ "%.2f"|format(target.confidence) }}</td>
           <td>{{ "%.0f"|format(target.center_x) }}, {{ "%.0f"|format(target.center_y) }}</td>
-          <td>{{ "%.0f"|format(target.width) }} × {{ "%.0f"|format(target.height) }}</td>
+          <td>{{ "%.0f"|format(target.width) }} x {{ "%.0f"|format(target.height) }}</td>
         </tr>
       {% endfor %}
       </tbody>
@@ -56,12 +56,15 @@
       <div>
         <label for="model">Installed IMX500 model</label>
         <select id="model" name="model">
-          <option value="">Camera only (no object detection)</option>
+          <option value="" {% if not settings.model or settings.model not in models %}selected{% endif %}>Camera only (no object detection)</option>
           {% for model in models %}
             <option value="{{ model }}" {% if settings.model == model %}selected{% endif %}>{{ model }}</option>
           {% endfor %}
         </select>
         <small>Copy a converted .rpk model into the models folder first.</small>
+        {% if settings.model and settings.model not in models %}
+          <p class="message">The saved model {{ settings.model }} is missing. Choose an installed model or camera-only, then save.</p>
+        {% endif %}
       </div>
       <div>
         <label for="confidence">Confidence threshold (0–1)</label>

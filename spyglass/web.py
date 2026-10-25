@@ -1,7 +1,8 @@
 """Flask web interface for configuration and camera debugging."""
 
-import time
+import os
 import secrets
+import time
 from pathlib import Path
 
 from flask import Flask, Response, flash, jsonify, redirect, render_template, request, url_for
@@ -15,6 +16,7 @@ from spyglass.config import (
 )
 from spyglass.runtime import VisionRuntime
 
+
 def create_app(
     settings_path: Path | None = None,
     model_dir: Path | None = None,
@@ -23,7 +25,9 @@ def create_app(
     root = Path(__file__).resolve().parent.parent
     model_dir = model_dir or root / "models"
     labels_path = labels_path or root / "labels.txt"
-    settings_path = settings_path or Path("/var/lib/spy-glass/settings.json")
+    settings_path = settings_path or Path(
+        os.environ.get("SPYGLASS_SETTINGS", str(root / "settings.json"))
+    )
     model_dir.mkdir(parents=True, exist_ok=True)
 
     app = Flask(__name__)

@@ -28,7 +28,9 @@ def list_models(model_dir: Path) -> list[str]:
     return sorted(path.name for path in model_dir.glob("*.rpk") if path.is_file())
 
 
-def validate_settings(settings: Settings, model_dir: Path) -> Settings:
+def validate_settings(
+    settings: Settings, model_dir: Path, check_model: bool = True
+) -> Settings:
     """Validate values before the settings are used by the app."""
     for name in ("team_number", "camera_width", "camera_height", "camera_fps"):
         if type(getattr(settings, name)) is not int:
@@ -39,6 +41,11 @@ def validate_settings(settings: Settings, model_dir: Path) -> Settings:
             raise SettingsError(f"{name.replace('_', ' ').capitalize()} must be a finite number.")
     if not isinstance(settings.model, str):
         raise SettingsError("Model must be a file name.")
+    if settings.model and (
+        Path(settings.model).name != settings.model
+        or not settings.model.endswith(".rpk")
+    ):
+        raise SettingsError("Model must be the name of an .rpk file.")
     if not 0 <= settings.team_number <= 99999:
         raise SettingsError("FRC team number must be between 0 and 99999.")
     if not 0.0 <= settings.confidence <= 1.0:
@@ -53,7 +60,7 @@ def validate_settings(settings: Settings, model_dir: Path) -> Settings:
         raise SettingsError("Horizontal field of view must be between 1 and 180 degrees.")
     if not 1.0 <= settings.vertical_fov < 180.0:
         raise SettingsError("Vertical field of view must be between 1 and 180 degrees.")
-    if settings.model and settings.model not in list_models(model_dir):
+    if check_model and settings.model and settings.model not in list_models(model_dir):
         raise SettingsError("Select an installed .rpk model.")
     return settings
 
@@ -69,7 +76,7 @@ def load_settings(path: Path, model_dir: Path) -> Settings:
         settings = Settings(**saved)
     except (json.JSONDecodeError, TypeError) as exc:
         raise SettingsError(f"Could not read settings file: {exc}") from exc
-    return validate_settings(settings, model_dir)
+    return validate_settings(settings, model_dir, check_model=False)
 
 
 def save_settings(path: Path, model_dir: Path, settings: Settings) -> None:

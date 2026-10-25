@@ -119,7 +119,7 @@ class VisionCamera:
         if outputs is None:
             return []
         boxes, scores, classes = outputs[0][0], outputs[1][0], outputs[2][0]
-        input_width, input_height = self._imx500.get_input_size()
+        _, input_height = self._imx500.get_input_size()
         if self._intrinsics.bbox_normalization:
             boxes = boxes / input_height
         if self._intrinsics.bbox_order == "xy":
@@ -137,7 +137,14 @@ class VisionCamera:
                 continue
             x, y, width, height = coords
             by_label.setdefault(labels[label_index], []).append(
-                Target(labels[label_index], float(score), x, y, width, height)
+                Target(
+                    labels[label_index],
+                    float(score),
+                    float(x),
+                    float(y),
+                    float(width),
+                    float(height),
+                )
             )
 
         from spyglass.targets import suppress_overlapping_targets
