@@ -49,6 +49,19 @@ Copy an `.rpk` model and the matching `labels.txt` to the Pi's `models/`
 folder. The labels file contains one class name per line; the line number is
 the class ID used by the model.
 
+To package a compiled `packerOut.zip` from the IMX500 converter, upload it in
+the **Package a compiled IMX500 ZIP** section of the settings panel. The Pi
+runs `imx500-package -i <archive> -o <temporary-output-directory>` and installs
+the resulting `.rpk` in `models/`. By default, the uploaded ZIP's filename is
+used; an optional model name can be entered to name the `.rpk` instead. The new
+model appears in the model selector; select it and press **Save and apply** to
+activate it. This packaging step does not convert PyTorch weights: model
+export, calibration, quantization, and compilation must already have been
+completed on a compatible host computer.
+Uploads are limited to 128 MiB. Only upload trusted converter output, and keep
+the unauthenticated web interface on a trusted private network. The IMX500
+packaging tools must be installed on the Pi.
+
 Start Spy Glass manually for the first test:
 
 ```sh
@@ -125,6 +138,8 @@ robot or target pose.
 
 - `spyglass/config.py` — settings defaults, validation, model discovery, and
   JSON persistence.
+- `spyglass/model_packaging.py` — validates and packages compiled IMX500 ZIP
+  archives into installed `.rpk` models.
 - `spyglass/camera.py` — Picamera2 capture, IMX500 detections, NMS, and stream
   frames.
 - `spyglass/targets.py` — shared target format and class-aware IoU filtering.

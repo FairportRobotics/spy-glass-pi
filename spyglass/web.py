@@ -14,6 +14,7 @@ from spyglass.config import (
     load_settings,
     save_settings,
 )
+from spyglass.model_packaging import ModelPackagingError, package_packer_output
 from spyglass.runtime import VisionRuntime
 
 
@@ -32,6 +33,7 @@ def create_app(
 
     app = Flask(__name__)
     app.secret_key = secrets.token_hex(32)
+    app.config["MAX_CONTENT_LENGTH"] = 128 * 1024 * 1024
     settings = load_settings(settings_path, model_dir)
     runtime = VisionRuntime(model_dir, labels_path)
     runtime.settings = settings
@@ -80,6 +82,30 @@ def create_app(
             flash("Settings saved and applied.", "success")
         except Exception as exc:
             flash(f"Settings saved, but the camera/runtime could not start: {exc}", "error")
+        return redirect(url_for("index"))
+
+    @app.post("/models/package")
+    def package_model():
+        upload = request.files.get("model_zip")
+        if upload is None:
+            flash("Choose a compiled IMX500 .zip archive to package.", "error")
+            return redirect(url_for("index"))
+        try:
+            model_name = package_packer_output(
+                upload, model_dir, request.form.get("model_name")
+            )
+        except ModelPackagingError as exc:
+            flash(f"Model was not installed: {exc}", "error")
+        else:
+            flash(
+                f"Installed {model_name}. Select it above and save to use it.",
+                "success",
+            )
+        return redirect(url_for("index"))
+
+    @app.errorhandler(413)
+    def upload_too_large(_error):
+        flash("Model ZIP uploads must be no larger than 128 MiB.", "error")
         return redirect(url_for("index"))
 
     @app.get("/stream.mjpg")

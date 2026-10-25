@@ -112,6 +112,15 @@
         </div>
         <button type="submit">Save and apply</button>
       </form>
+      <h3>Package a compiled IMX500 ZIP</h3>
+      <p><small>Upload the packerOut.zip produced by the converter. PyTorch models must be converted on a host computer first.</small></p>
+      <form action="{{ url_for('package_model') }}" method="post" enctype="multipart/form-data">
+        <label for="model_name">Model name (optional)</label>
+        <input id="model_name" name="model_name" type="text" maxlength="64" placeholder="Defaults to ZIP filename">
+        <label for="model_zip">Compiled model ZIP file (max 128 MiB)</label>
+        <input id="model_zip" name="model_zip" type="file" accept=".zip,application/zip" required>
+        <button type="submit">Package model ZIP</button>
+      </form>
     </section>
   </main>
   <script>

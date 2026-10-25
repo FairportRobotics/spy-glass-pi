@@ -1,6 +1,9 @@
+import io
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from spyglass.targets import Target
 
@@ -97,6 +100,110 @@ class WebAppTests(unittest.TestCase):
         response = self.client.post("/settings", data={"team_number": "bad"})
         self.assertEqual(response.status_code, 302)
         self.assertFalse(self.settings_path.exists())
+
+    @patch("spyglass.model_packaging.shutil.which", return_value="/usr/bin/imx500-package")
+    @patch("spyglass.model_packaging.subprocess.run")
+    def test_packages_compiled_zip_and_installs_model(self, run, _which):
+        def create_packaged_output(command, **_kwargs):
+            output_dir = Path(command[4])
+            (output_dir / "network.rpk").write_bytes(b"rpk")
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        run.side_effect = create_packaged_output
+        response = self.client.post(
+            "/models/package",
+            data={"model_zip": (io.BytesIO(b"zip archive"), "packerOut.zip")},
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue((self.models / "packerOut.rpk").is_file())
+        self.assertIn(b"Installed packerOut.rpk", response.data)
+        self.assertEqual(run.call_args.args[0][0], "/usr/bin/imx500-package")
+
+    @patch("spyglass.model_packaging.shutil.which", return_value="/usr/bin/imx500-package")
+    @patch("spyglass.model_packaging.subprocess.run")
+    def test_custom_model_name_is_used_for_installed_package(self, run, _which):
+        def create_packaged_output(command, **_kwargs):
+            output_dir = Path(command[4])
+            (output_dir / "network.rpk").write_bytes(b"rpk")
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        run.side_effect = create_packaged_output
+        response = self.client.post(
+            "/models/package",
+            data={
+                "model_name": "Team 578 reefscape",
+                "model_zip": (io.BytesIO(b"zip archive"), "packerOut.zip"),
+            },
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue((self.models / "Team_578_reefscape.rpk").is_file())
+        self.assertIn(b"Installed Team_578_reefscape.rpk", response.data)
+
+    @patch("spyglass.model_packaging.shutil.which", return_value="/usr/bin/imx500-package")
+    @patch("spyglass.model_packaging.subprocess.run")
+    def test_rejects_non_zip_upload(self, run, _which):
+        response = self.client.post(
+            "/models/package",
+            data={"model_zip": (io.BytesIO(b"not a zip"), "model.pt")},
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Upload a compiled .zip file", response.data)
+        run.assert_not_called()
+
+    @patch("spyglass.model_packaging.shutil.which", return_value=None)
+    def test_reports_missing_packaging_tool(self, _which):
+        response = self.client.post(
+            "/models/package",
+            data={"model_zip": (io.BytesIO(b"zip archive"), "packerOut.zip")},
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"imx500-package tool is unavailable", response.data)
+
+    @patch("spyglass.model_packaging.shutil.which", return_value="/usr/bin/imx500-package")
+    @patch("spyglass.model_packaging.subprocess.run")
+    def test_reports_packaging_failure_without_installing_model(self, run, _which):
+        run.return_value = subprocess.CompletedProcess(
+            [], 1, "", "invalid packer archive"
+        )
+        response = self.client.post(
+            "/models/package",
+            data={"model_zip": (io.BytesIO(b"bad archive"), "packerOut.zip")},
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Model packaging failed: invalid packer archive", response.data)
+        self.assertFalse((self.models / "packerOut.rpk").exists())
+
+    @patch("spyglass.model_packaging.shutil.which", return_value="/usr/bin/imx500-package")
+    @patch("spyglass.model_packaging.subprocess.run")
+    def test_does_not_overwrite_existing_model(self, run, _which):
+        (self.models / "packerOut.rpk").write_bytes(b"existing model")
+
+        response = self.client.post(
+            "/models/package",
+            data={"model_zip": (io.BytesIO(b"zip archive"), "packerOut.zip")},
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"A model named packerOut.rpk is already installed", response.data)
+        self.assertEqual((self.models / "packerOut.rpk").read_bytes(), b"existing model")
+        run.assert_not_called()
 
 
 if __name__ == "__main__":
