@@ -45,6 +45,8 @@ class WebAppTests(unittest.TestCase):
         self.assertEqual(status.json["team_number"], 578)
         self.assertFalse(status.json["networktables_connected"])
         self.assertIn(b"NetworkTables:", page.data)
+        self.assertIn(b"Advanced camera settings", page.data)
+        self.assertIn(b"Output stream width (pixels)", page.data)
 
     def test_status_endpoint_returns_latest_targets(self):
         class StubCamera:

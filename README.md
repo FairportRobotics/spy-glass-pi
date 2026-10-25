@@ -79,6 +79,12 @@ whether the NetworkTables client is connected, and the detected-target list
 refreshes automatically while the page is open. Team number `0` disables
 NetworkTables.
 
+Resolution, frame rate, and field-of-view settings are under **Advanced camera
+settings**. Resolution controls the processed output stream, not the camera
+sensor's physical resolution. The field-of-view values are lens/calibration
+estimates used for reported target angles; they are not automatically read
+from the camera hardware.
+
 The web page is intentionally unauthenticated for simple use on a private
 robotics network. Do not expose port 5000 to the public internet or an
 untrusted network.

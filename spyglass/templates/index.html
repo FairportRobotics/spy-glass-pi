@@ -10,6 +10,8 @@
     .camera-panel, .settings-panel { min-width: 0; }
     .settings-panel { padding: 0 1rem 1rem; background: #f5f5f5; border-radius: .4rem; }
     .settings-grid { display: grid; gap: .25rem; grid-template-columns: minmax(0, 1fr); }
+    details { margin-top: 1rem; }
+    summary { cursor: pointer; font-weight: bold; }
     label { display: block; margin: .8rem 0 .25rem; }
     input, select { box-sizing: border-box; padding: .4rem; width: 100%; }
     input[type="range"] { padding: 0; }
@@ -91,27 +93,33 @@
             <label for="iou">IoU threshold: <output id="iou-value" class="range-value">{{ "%.2f"|format(settings.iou) }}</output></label>
             <input id="iou" name="iou" type="range" min="0" max="1" step="0.01" required value="{{ settings.iou }}">
           </div>
-          <div>
-            <label for="camera_width">Camera width (pixels)</label>
-            <input id="camera_width" name="camera_width" type="number" min="1" required value="{{ settings.camera_width }}">
-          </div>
-          <div>
-            <label for="camera_height">Camera height (pixels)</label>
-            <input id="camera_height" name="camera_height" type="number" min="1" required value="{{ settings.camera_height }}">
-          </div>
-          <div>
-            <label for="camera_fps">Camera frame rate</label>
-            <input id="camera_fps" name="camera_fps" type="number" min="1" max="120" required value="{{ settings.camera_fps }}">
-          </div>
-          <div>
-            <label for="horizontal_fov">Horizontal field of view (degrees)</label>
-            <input id="horizontal_fov" name="horizontal_fov" type="number" min="1" max="179" step="0.1" required value="{{ settings.horizontal_fov }}">
-          </div>
-          <div>
-            <label for="vertical_fov">Vertical field of view (degrees)</label>
-            <input id="vertical_fov" name="vertical_fov" type="number" min="1" max="179" step="0.1" required value="{{ settings.vertical_fov }}">
-          </div>
         </div>
+        <details>
+          <summary>Advanced camera settings</summary>
+          <p><small>Resolution sets the processed video stream size, not the sensor's physical resolution. Field of view is a lens/calibration value; it affects reported target angles, not detection.</small></p>
+          <div class="settings-grid">
+            <div>
+              <label for="camera_width">Output stream width (pixels)</label>
+              <input id="camera_width" name="camera_width" type="number" min="1" max="1920" required value="{{ settings.camera_width }}">
+            </div>
+            <div>
+              <label for="camera_height">Output stream height (pixels)</label>
+              <input id="camera_height" name="camera_height" type="number" min="1" max="1080" required value="{{ settings.camera_height }}">
+            </div>
+            <div>
+              <label for="camera_fps">Camera frame rate</label>
+              <input id="camera_fps" name="camera_fps" type="number" min="1" max="120" required value="{{ settings.camera_fps }}">
+            </div>
+            <div>
+              <label for="horizontal_fov">Horizontal field of view (degrees)</label>
+              <input id="horizontal_fov" name="horizontal_fov" type="number" min="1" max="179" step="0.1" required value="{{ settings.horizontal_fov }}">
+            </div>
+            <div>
+              <label for="vertical_fov">Vertical field of view (degrees)</label>
+              <input id="vertical_fov" name="vertical_fov" type="number" min="1" max="179" step="0.1" required value="{{ settings.vertical_fov }}">
+            </div>
+          </div>
+        </details>
         <button type="submit">Save and apply</button>
       </form>
       <h3>Package a compiled IMX500 ZIP</h3>
