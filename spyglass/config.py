@@ -1,6 +1,7 @@
 """Loading, validating, and saving the coprocessor settings."""
 
 import json
+import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -29,14 +30,23 @@ def list_models(model_dir: Path) -> list[str]:
 
 def validate_settings(settings: Settings, model_dir: Path) -> Settings:
     """Validate values before the settings are used by the app."""
+    for name in ("team_number", "camera_width", "camera_height", "camera_fps"):
+        if type(getattr(settings, name)) is not int:
+            raise SettingsError(f"{name.replace('_', ' ').capitalize()} must be a whole number.")
+    for name in ("confidence", "iou", "horizontal_fov", "vertical_fov"):
+        value = getattr(settings, name)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise SettingsError(f"{name.replace('_', ' ').capitalize()} must be a finite number.")
+    if not isinstance(settings.model, str):
+        raise SettingsError("Model must be a file name.")
     if not 0 <= settings.team_number <= 99999:
         raise SettingsError("FRC team number must be between 0 and 99999.")
     if not 0.0 <= settings.confidence <= 1.0:
         raise SettingsError("Confidence must be between 0 and 1.")
     if not 0.0 <= settings.iou <= 1.0:
         raise SettingsError("IoU must be between 0 and 1.")
-    if settings.camera_width < 1 or settings.camera_height < 1:
-        raise SettingsError("Camera width and height must be positive.")
+    if not 1 <= settings.camera_width <= 1920 or not 1 <= settings.camera_height <= 1080:
+        raise SettingsError("Camera width must be 1–1920 and height 1–1080.")
     if not 1 <= settings.camera_fps <= 120:
         raise SettingsError("Camera FPS must be between 1 and 120.")
     if not 1.0 <= settings.horizontal_fov < 180.0:
