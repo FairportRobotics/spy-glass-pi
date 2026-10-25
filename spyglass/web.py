@@ -24,7 +24,7 @@ def create_app(
 ) -> Flask:
     root = Path(__file__).resolve().parent.parent
     model_dir = model_dir or root / "models"
-    labels_path = labels_path or root / "labels.txt"
+    labels_path = labels_path or model_dir / "labels.txt"
     settings_path = settings_path or Path(
         os.environ.get("SPYGLASS_SETTINGS", str(root / "settings.json"))
     )

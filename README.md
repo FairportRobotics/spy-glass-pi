@@ -45,9 +45,9 @@ Reboot if prompted by the IMX500 package installation:
 sudo reboot
 ```
 
-Copy an `.rpk` model and the matching `labels.txt` to the Pi. Put the model in
-the repository's `models/` folder. The labels file contains one class name per
-line; the line number is the class ID used by the model.
+Copy an `.rpk` model and the matching `labels.txt` to the Pi's `models/`
+folder. The labels file contains one class name per line; the line number is
+the class ID used by the model.
 
 Start Spy Glass manually for the first test:
 
@@ -132,7 +132,7 @@ robot or target pose.
   configuration page.
 - `spyglass/__main__.py` — command-line entry point used by the service.
 - `models/` — locally installed `.rpk` files (not tracked by Git).
-- `labels.txt` — class names for the model currently used by the team.
+- `models/labels.txt` — class names for the model currently used by the team.
 - `tests/` — unit tests that run without a Raspberry Pi or robot.
 
 To run the unit tests after installation:
@@ -150,8 +150,8 @@ make test
   in the `models/` folder. PyTorch `.pt` files and conversion zip files are
   not selectable.
 - **No detections:** check that the selected model is an object detector, that
-  `labels.txt` uses the model's class order, and that the confidence threshold
-  is not too high.
+  `models/labels.txt` uses the model's class order, and that the confidence
+  threshold is not too high.
 - **No robot connection:** verify the team number and that the robot's NT4
   server is reachable from the Pi. A team number of `0` intentionally turns
   off the client.

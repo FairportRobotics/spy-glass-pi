@@ -22,7 +22,7 @@ class WebAppTests(unittest.TestCase):
         self.app = create_app(
             settings_path=self.settings_path,
             model_dir=self.models,
-            labels_path=root / "labels.txt",
+            labels_path=self.models / "labels.txt",
         )
         self.app.extensions["spy_glass"]["runtime"].apply_settings = lambda settings: None
         self.client = self.app.test_client()
