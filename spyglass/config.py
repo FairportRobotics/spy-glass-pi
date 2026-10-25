@@ -14,6 +14,8 @@ class Settings:
     camera_width: int = 640
     camera_height: int = 480
     camera_fps: int = 30
+    horizontal_fov: float = 62.2
+    vertical_fov: float = 48.8
 
 
 class SettingsError(ValueError):
@@ -37,6 +39,10 @@ def validate_settings(settings: Settings, model_dir: Path) -> Settings:
         raise SettingsError("Camera width and height must be positive.")
     if not 1 <= settings.camera_fps <= 120:
         raise SettingsError("Camera FPS must be between 1 and 120.")
+    if not 1.0 <= settings.horizontal_fov < 180.0:
+        raise SettingsError("Horizontal field of view must be between 1 and 180 degrees.")
+    if not 1.0 <= settings.vertical_fov < 180.0:
+        raise SettingsError("Vertical field of view must be between 1 and 180 degrees.")
     if settings.model and settings.model not in list_models(model_dir):
         raise SettingsError("Select an installed .rpk model.")
     return settings
