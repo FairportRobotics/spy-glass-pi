@@ -61,9 +61,10 @@ systemd service instead stores them in `/var/lib/spy-glass/settings.json`.
 From a computer on the same trusted network, open
 `http://<raspberry-pi-address>:5000`. Enter the FRC team number, choose the
 installed model, check camera settings and confidence/IoU thresholds, then
-press **Save and apply**. The detected-target list refreshes automatically
-while the page is open. Team number `0` disables NetworkTables until a team is
-configured.
+press **Save and apply**. The default FRC team number is `578`. The page shows
+whether the NetworkTables client is connected, and the detected-target list
+refreshes automatically while the page is open. Team number `0` disables
+NetworkTables.
 
 The web page is intentionally unauthenticated for simple use on a private
 robotics network. Do not expose port 5000 to the public internet or an

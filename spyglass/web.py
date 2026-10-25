@@ -51,6 +51,7 @@ def create_app(
             models=list_models(model_dir),
             targets=runtime.targets,
             camera_error=runtime.camera_error,
+            networktables_connected=runtime.networktables_connected,
         )
 
     @app.post("/settings")
@@ -103,6 +104,7 @@ def create_app(
                 "team_number": app.extensions["spy_glass"]["settings"].team_number,
                 "model": app.extensions["spy_glass"]["settings"].model,
                 "camera_error": runtime.camera_error,
+                "networktables_connected": runtime.networktables_connected,
                 "targets": [target.__dict__ for target in runtime.targets],
             }
         )

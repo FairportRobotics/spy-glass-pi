@@ -8,7 +8,7 @@ from pathlib import Path
 
 @dataclass
 class Settings:
-    team_number: int = 0
+    team_number: int = 578
     model: str = ""
     confidence: float = 0.55
     iou: float = 0.65

@@ -89,3 +89,8 @@ class NetworkTablesPublisher:
 
     def close(self) -> None:
         self.instance.stopClient()
+
+    @property
+    def connected(self) -> bool:
+        """Whether this client currently has a NetworkTables connection."""
+        return self.instance.isConnected()

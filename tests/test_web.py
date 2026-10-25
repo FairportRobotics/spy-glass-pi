@@ -39,7 +39,9 @@ class WebAppTests(unittest.TestCase):
         self.assertIn(b"refreshDetections", page.data)
         status = self.client.get("/api/status")
         self.assertEqual(status.status_code, 200)
-        self.assertEqual(status.json["team_number"], 0)
+        self.assertEqual(status.json["team_number"], 578)
+        self.assertFalse(status.json["networktables_connected"])
+        self.assertIn(b"NetworkTables:", page.data)
 
     def test_status_endpoint_returns_latest_targets(self):
         class StubCamera:
@@ -61,6 +63,16 @@ class WebAppTests(unittest.TestCase):
             "width": 30,
             "height": 40,
         }])
+
+    def test_status_endpoint_reports_networktables_connection(self):
+        class StubPublisher:
+            connected = True
+
+        self.app.extensions["spy_glass"]["runtime"].publisher = StubPublisher()
+
+        status = self.client.get("/api/status")
+
+        self.assertTrue(status.json["networktables_connected"])
 
     def test_saves_valid_settings(self):
         response = self.client.post(

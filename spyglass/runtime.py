@@ -70,3 +70,7 @@ class VisionRuntime:
     @property
     def camera_error(self) -> str:
         return self.camera.error if self.camera else self.error
+
+    @property
+    def networktables_connected(self) -> bool:
+        return bool(self.publisher and self.publisher.connected)

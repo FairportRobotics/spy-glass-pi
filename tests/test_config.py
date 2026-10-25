@@ -32,6 +32,7 @@ class SettingsTests(unittest.TestCase):
 
     def test_defaults_and_round_trip(self):
         self.assertEqual(load_settings(self.settings_path, self.models), Settings())
+        self.assertEqual(Settings().team_number, 578)
         settings = Settings(team_number=578, model="robots.rpk", confidence=0.7)
         save_settings(self.settings_path, self.models, settings)
         self.assertEqual(load_settings(self.settings_path, self.models), settings)
