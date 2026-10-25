@@ -12,6 +12,8 @@
     .settings-grid { display: grid; gap: .25rem; grid-template-columns: minmax(0, 1fr); }
     label { display: block; margin: .8rem 0 .25rem; }
     input, select { box-sizing: border-box; padding: .4rem; width: 100%; }
+    input[type="range"] { padding: 0; }
+    .range-value { display: inline-block; min-width: 3ch; font-variant-numeric: tabular-nums; }
     button { margin-top: 1rem; padding: .6rem 1rem; }
     .message { padding: .7rem; background: #eee; }
     .connection-status { font-weight: bold; }
@@ -82,12 +84,12 @@
             {% endif %}
           </div>
           <div>
-            <label for="confidence">Confidence threshold (0–1)</label>
-            <input id="confidence" name="confidence" type="number" min="0" max="1" step="0.01" required value="{{ settings.confidence }}">
+            <label for="confidence">Confidence threshold: <output id="confidence-value" class="range-value">{{ "%.2f"|format(settings.confidence) }}</output></label>
+            <input id="confidence" name="confidence" type="range" min="0" max="1" step="0.01" required value="{{ settings.confidence }}">
           </div>
           <div>
-            <label for="iou">IoU threshold (0–1)</label>
-            <input id="iou" name="iou" type="number" min="0" max="1" step="0.01" required value="{{ settings.iou }}">
+            <label for="iou">IoU threshold: <output id="iou-value" class="range-value">{{ "%.2f"|format(settings.iou) }}</output></label>
+            <input id="iou" name="iou" type="range" min="0" max="1" step="0.01" required value="{{ settings.iou }}">
           </div>
           <div>
             <label for="camera_width">Camera width (pixels)</label>
@@ -132,6 +134,17 @@
     const cameraStatus = document.getElementById("camera-status");
     const cameraStream = document.getElementById("camera-stream");
     const networkTablesStatus = document.getElementById("networktables-status");
+    const confidence = document.getElementById("confidence");
+    const confidenceValue = document.getElementById("confidence-value");
+    const iou = document.getElementById("iou");
+    const iouValue = document.getElementById("iou-value");
+
+    confidence.addEventListener("input", () => {
+      confidenceValue.value = Number(confidence.value).toFixed(2);
+    });
+    iou.addEventListener("input", () => {
+      iouValue.value = Number(iou.value).toFixed(2);
+    });
 
     function updateDetections(targets) {
       detectionRows.replaceChildren(...targets.map((target) => {
