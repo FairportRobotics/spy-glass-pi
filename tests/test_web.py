@@ -77,6 +77,29 @@ class WebAppTests(unittest.TestCase):
 
         self.assertTrue(status.json["networktables_connected"])
 
+    def test_stream_viewer_is_removed_when_response_closes(self):
+        runtime = self.app.extensions["spy_glass"]["runtime"]
+
+        class StubCamera:
+            @staticmethod
+            def set_stream_enabled(_enabled):
+                pass
+
+            @staticmethod
+            def latest_frame():
+                return b"jpeg"
+
+        runtime.camera = StubCamera()
+        response = self.client.get("/stream.mjpg", buffered=False)
+        frames = iter(response.response)
+
+        self.assertIn(b"jpeg", next(frames))
+        self.assertEqual(runtime._stream_clients, 1)
+
+        response.close()
+
+        self.assertEqual(runtime._stream_clients, 0)
+
     def test_saves_valid_settings(self):
         response = self.client.post(
             "/settings",

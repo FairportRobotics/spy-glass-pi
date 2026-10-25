@@ -1,3 +1,4 @@
+import sys
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -19,6 +20,48 @@ class BoxArray:
 
 
 class VisionCameraTests(unittest.TestCase):
+    def test_capture_skips_jpeg_encoding_when_stream_has_no_viewers(self):
+        vision = VisionCamera(Settings(), Path("models"), Path("models/labels.txt"))
+        request = Mock()
+        request.get_metadata.return_value = {}
+        request.make_array.return_value = object()
+
+        def capture_request():
+            vision._stop_event.set()
+            return request
+
+        vision._camera = Mock()
+        vision._camera.capture_request.side_effect = capture_request
+        cv2 = Mock()
+
+        with patch.dict(sys.modules, {"cv2": cv2}):
+            vision._capture_loop()
+
+        cv2.imencode.assert_not_called()
+        self.assertIsNone(vision.latest_frame())
+
+    def test_capture_encodes_jpeg_when_stream_has_a_viewer(self):
+        vision = VisionCamera(Settings(), Path("models"), Path("models/labels.txt"))
+        vision.set_stream_enabled(True)
+        request = Mock()
+        request.get_metadata.return_value = {}
+        request.make_array.return_value = object()
+
+        def capture_request():
+            vision._stop_event.set()
+            return request
+
+        vision._camera = Mock()
+        vision._camera.capture_request.side_effect = capture_request
+        cv2 = Mock()
+        cv2.imencode.return_value = (True, SimpleNamespace(tobytes=lambda: b"jpeg"))
+
+        with patch.dict(sys.modules, {"cv2": cv2}):
+            vision._capture_loop()
+
+        cv2.imencode.assert_called_once()
+        self.assertEqual(vision.latest_frame(), b"jpeg")
+
     def test_missing_normalization_metadata_scales_pixel_boxes(self):
         vision = VisionCamera(
             Settings(model="test.rpk", confidence=0.05),

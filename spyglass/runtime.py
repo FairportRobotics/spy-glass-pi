@@ -20,6 +20,7 @@ class VisionRuntime:
         self.error = ""
         self.settings = Settings()
         self._lock = threading.Lock()
+        self._stream_clients = 0
 
     def apply_settings(self, settings: Settings) -> None:
         """Restart camera and publisher so changed settings take effect."""
@@ -35,6 +36,7 @@ class VisionRuntime:
                     self.labels_path,
                     on_targets=self._publish_targets,
                 )
+                self.camera.set_stream_enabled(self._stream_clients > 0)
                 self.camera.start()
                 self.error = ""
             except Exception as exc:
@@ -62,6 +64,18 @@ class VisionRuntime:
         if self.publisher:
             self.publisher.close()
             self.publisher = None
+
+    def stream_client_connected(self) -> None:
+        with self._lock:
+            self._stream_clients += 1
+            if self.camera and self._stream_clients == 1:
+                self.camera.set_stream_enabled(True)
+
+    def stream_client_disconnected(self) -> None:
+        with self._lock:
+            self._stream_clients = max(0, self._stream_clients - 1)
+            if self.camera and self._stream_clients == 0:
+                self.camera.set_stream_enabled(False)
 
     @property
     def targets(self):

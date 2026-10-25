@@ -26,6 +26,7 @@ class VisionCamera:
         self._lock = threading.Lock()
         self._thread = None
         self._stop_event = threading.Event()
+        self._stream_enabled = threading.Event()
         self._frame = None
         self._targets: list[Target] = []
         self._error = ""
@@ -88,25 +89,30 @@ class VisionCamera:
                     request.release()
 
                 targets = self._detect(metadata) if self._imx500 else []
-                for target in targets:
-                    left, top = int(target.x), int(target.y)
-                    right = int(target.x + target.width)
-                    bottom = int(target.y + target.height)
-                    cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-                    cv2.putText(
-                        frame,
-                        f"{target.label} {target.confidence:.2f}",
-                        (left, max(18, top - 5)),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.5,
-                        (0, 255, 0),
-                        1,
-                    )
-                success, encoded = cv2.imencode(".jpg", frame)
-                if not success:
-                    raise RuntimeError("Could not encode the camera frame as JPEG.")
+                encoded_frame = None
+                if self._stream_enabled.is_set():
+                    for target in targets:
+                        left, top = int(target.x), int(target.y)
+                        right = int(target.x + target.width)
+                        bottom = int(target.y + target.height)
+                        cv2.rectangle(
+                            frame, (left, top), (right, bottom), (0, 255, 0), 2
+                        )
+                        cv2.putText(
+                            frame,
+                            f"{target.label} {target.confidence:.2f}",
+                            (left, max(18, top - 5)),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5,
+                            (0, 255, 0),
+                            1,
+                        )
+                    success, encoded = cv2.imencode(".jpg", frame)
+                    if not success:
+                        raise RuntimeError("Could not encode the camera frame as JPEG.")
+                    encoded_frame = encoded.tobytes()
                 with self._lock:
-                    self._frame = encoded.tobytes()
+                    self._frame = encoded_frame
                     self._targets = targets
                 if self.on_targets:
                     self.on_targets(targets)
@@ -171,6 +177,14 @@ class VisionCamera:
     def latest_targets(self) -> list[Target]:
         with self._lock:
             return list(self._targets)
+
+    def set_stream_enabled(self, enabled: bool) -> None:
+        if enabled:
+            self._stream_enabled.set()
+        else:
+            self._stream_enabled.clear()
+            with self._lock:
+                self._frame = None
 
     @property
     def error(self) -> str:

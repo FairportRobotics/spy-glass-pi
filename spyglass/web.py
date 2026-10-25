@@ -111,12 +111,16 @@ def create_app(
     @app.get("/stream.mjpg")
     def stream():
         def frames():
-            while True:
-                camera = runtime.camera
-                frame = camera.latest_frame() if camera else None
-                if frame:
-                    yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
-                time.sleep(0.08)
+            runtime.stream_client_connected()
+            try:
+                while True:
+                    camera = runtime.camera
+                    frame = camera.latest_frame() if camera else None
+                    if frame:
+                        yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+                    time.sleep(0.08)
+            finally:
+                runtime.stream_client_disconnected()
 
         return Response(
             frames(),

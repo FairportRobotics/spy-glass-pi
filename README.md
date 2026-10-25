@@ -141,7 +141,8 @@ robot or target pose.
 - `spyglass/model_packaging.py` — validates and packages compiled IMX500 ZIP
   archives into installed `.rpk` models.
 - `spyglass/camera.py` — Picamera2 capture, IMX500 detections, NMS, and stream
-  frames.
+  frames. It skips overlay drawing and JPEG encoding when no browser is
+  viewing the camera stream.
 - `spyglass/targets.py` — shared target format and class-aware IoU filtering.
 - `spyglass/networktables.py` — Limelight-style values and NT4 publishing.
 - `spyglass/runtime.py` — starts/stops the camera and NetworkTables publisher.
