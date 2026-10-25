@@ -70,20 +70,15 @@ untrusted network.
 
 ## Run automatically at boot
 
-The repository includes a systemd service file. The following commands create
-a dedicated system account, make it the owner of the checkout, prepare the
-settings folder, and enable the service:
+The repository includes a systemd service file. From the repository root, run
+the Make target to create a dedicated system account, make it the owner of the
+checkout, prepare the settings folder, and enable the service:
 
 ```sh
-sudo useradd --system --home-dir /opt/spy-glass --create-home --shell /usr/sbin/nologin spyglass
-sudo chown -R spyglass:spyglass /opt/spy-glass
-sudo install -d -o spyglass -g spyglass /var/lib/spy-glass
-sudo cp deploy/spy-glass.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now spy-glass
+sudo make install-service
 ```
 
-These commands assume the checkout and its virtual environment are at
+The target assumes the checkout and its virtual environment are at
 `/opt/spy-glass`. Copy `.rpk` models into `/opt/spy-glass/models/` and make
 sure the `spyglass` account can read them.
 
@@ -162,9 +157,3 @@ make test
   off the client.
 - **`tx`/`ty` seem inaccurate:** calibrate horizontal and vertical FOV and
   check that camera resolution and model inference are configured as expected.
-
-## Legacy files
-
-Older model archives and scripts may remain in the repository history or
-checkout. The current application does not use the old Makefile model
-packaging targets or the old `demo.py` preview loop.

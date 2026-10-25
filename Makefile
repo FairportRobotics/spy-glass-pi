@@ -1,7 +1,7 @@
 PYTHON ?= python3
 VENV := .venv
 
-.PHONY: install run test
+.PHONY: install install-service run test
 
 install:
 	sudo apt-get update
@@ -9,6 +9,14 @@ install:
 	$(PYTHON) -m venv --system-site-packages $(VENV)
 	$(VENV)/bin/pip install -r requirements.txt
 	mkdir -p models
+
+install-service:
+	sudo useradd --system --home-dir /opt/spy-glass --create-home --shell /usr/sbin/nologin spyglass
+	sudo chown -R spyglass:spyglass /opt/spy-glass
+	sudo install -d -o spyglass -g spyglass /var/lib/spy-glass
+	sudo cp deploy/spy-glass.service /etc/systemd/system/
+	sudo systemctl daemon-reload
+	sudo systemctl enable --now spy-glass
 
 run:
 	$(VENV)/bin/python -m spyglass
