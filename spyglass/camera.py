@@ -32,6 +32,7 @@ class VisionCamera:
         self._camera = None
         self._imx500 = None
         self._intrinsics = None
+        self._normalization_warning_logged = False
 
     def start(self) -> None:
         """Open the camera and start processing frames in the background."""
@@ -120,7 +121,16 @@ class VisionCamera:
             return []
         boxes, scores, classes = outputs[0][0], outputs[1][0], outputs[2][0]
         _, input_height = self._imx500.get_input_size()
-        if self._intrinsics.bbox_normalization:
+        bbox_normalization = self._intrinsics.bbox_normalization
+        if bbox_normalization is None and not self._normalization_warning_logged:
+            logger.warning(
+                "Model %s does not specify bbox_normalization; assuming bounding "
+                "boxes are in pixels and normalizing by input height %s.",
+                self.settings.model,
+                input_height,
+            )
+            self._normalization_warning_logged = True
+        if bbox_normalization is not False:
             boxes = boxes / input_height
         if self._intrinsics.bbox_order == "xy":
             boxes = boxes[:, [1, 0, 3, 2]]
