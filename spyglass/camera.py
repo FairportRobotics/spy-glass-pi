@@ -61,7 +61,7 @@ class VisionCamera:
         config = self._camera.create_video_configuration(
             main={
                 "size": (self.settings.camera_width, self.settings.camera_height),
-                "format": "BGR888",
+                "format": "RGB888",
             },
             controls={"FrameRate": self.settings.camera_fps},
             buffer_count=6,
