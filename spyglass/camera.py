@@ -171,7 +171,10 @@ class VisionCamera:
         self._stop_event.set()
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=3)
-        if self._camera:
-            self._camera.stop()
-            self._camera = None
+        camera, self._camera = self._camera, None
         self._thread = None
+        if camera:
+            try:
+                camera.stop()
+            finally:
+                camera.close()
