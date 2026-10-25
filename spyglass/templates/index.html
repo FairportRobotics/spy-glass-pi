@@ -22,17 +22,17 @@
   {% for category, message in get_flashed_messages(with_categories=true) %}
     <p class="message" role="status">{{ message }}</p>
   {% endfor %}
-  {% if camera_error %}
-    <p class="message">Camera/runtime status: {{ camera_error }}</p>
-  {% endif %}
+  <p id="camera-status" class="message" {% if not camera_error %}hidden{% endif %}>Camera/runtime status: {{ camera_error }}</p>
 
   <h2>Camera view</h2>
-  {% if not camera_error %}<img src="{{ url_for('stream') }}" alt="Live camera stream">{% endif %}
+  {% if not camera_error %}<img id="camera-stream" src="{{ url_for('stream') }}" alt="Live camera stream">{% endif %}
   <h2>Detected targets</h2>
-  {% if targets %}
-    <table>
+  <p id="detection-summary" aria-live="polite">
+    {{ targets|length }} target{% if targets|length != 1 %}s{% endif %} detected.
+  </p>
+  <table id="detection-table" {% if not targets %}hidden{% endif %}>
       <thead><tr><th>Class</th><th>Confidence</th><th>Center (pixels)</th><th>Size (pixels)</th></tr></thead>
-      <tbody>
+      <tbody id="detection-rows">
       {% for target in targets %}
         <tr>
           <td>{{ target.label }}</td><td>{{ "%.2f"|format(target.confidence) }}</td>
@@ -41,10 +41,9 @@
         </tr>
       {% endfor %}
       </tbody>
-    </table>
-  {% else %}
-    <p>No targets right now.</p>
-  {% endif %}
+  </table>
+  <p id="no-detections" {% if targets %}hidden{% endif %}>No targets right now.</p>
+  <p id="detection-refresh-error" class="message" role="alert" hidden></p>
 
   <h2>Settings</h2>
   <form action="{{ url_for('update_settings') }}" method="post">
@@ -97,5 +96,64 @@
     </div>
     <button type="submit">Save and apply</button>
   </form>
+  <script>
+    const detectionRows = document.getElementById("detection-rows");
+    const detectionTable = document.getElementById("detection-table");
+    const detectionSummary = document.getElementById("detection-summary");
+    const noDetections = document.getElementById("no-detections");
+    const refreshError = document.getElementById("detection-refresh-error");
+    const cameraStatus = document.getElementById("camera-status");
+    const cameraStream = document.getElementById("camera-stream");
+
+    function updateDetections(targets) {
+      detectionRows.replaceChildren(...targets.map((target) => {
+        const row = document.createElement("tr");
+        const cells = [
+          target.label,
+          Number(target.confidence).toFixed(2),
+          `${Number(target.x + target.width / 2).toFixed(0)}, ${Number(target.y + target.height / 2).toFixed(0)}`,
+          `${Number(target.width).toFixed(0)} x ${Number(target.height).toFixed(0)}`,
+        ];
+        for (const value of cells) {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.appendChild(cell);
+        }
+        return row;
+      }));
+      detectionTable.hidden = targets.length === 0;
+      noDetections.hidden = targets.length !== 0;
+      detectionSummary.textContent = `${targets.length} target${targets.length === 1 ? "" : "s"} detected.`;
+    }
+
+    async function refreshDetections() {
+      try {
+        const response = await fetch("{{ url_for('status') }}", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`Status request failed (${response.status}).`);
+        }
+        const status = await response.json();
+        if (!Array.isArray(status.targets)) {
+          throw new Error("Status response did not include a target list.");
+        }
+        cameraStatus.textContent = status.camera_error
+          ? `Camera/runtime status: ${status.camera_error}`
+          : "";
+        cameraStatus.hidden = !status.camera_error;
+        if (cameraStream) {
+          cameraStream.hidden = Boolean(status.camera_error);
+        }
+        updateDetections(status.camera_error ? [] : status.targets);
+        refreshError.hidden = true;
+      } catch (error) {
+        refreshError.textContent = "Live detections could not be refreshed. Retrying...";
+        refreshError.hidden = false;
+      } finally {
+        window.setTimeout(refreshDetections, 500);
+      }
+    }
+
+    refreshDetections();
+  </script>
 </body>
 </html>

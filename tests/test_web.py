@@ -2,6 +2,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from spyglass.targets import Target
+
 try:
     from flask import Flask
     from spyglass.web import create_app
@@ -34,9 +36,31 @@ class WebAppTests(unittest.TestCase):
         page = self.client.get("/")
         self.assertEqual(page.status_code, 200)
         self.assertIn(b"robots.rpk", page.data)
+        self.assertIn(b"refreshDetections", page.data)
         status = self.client.get("/api/status")
         self.assertEqual(status.status_code, 200)
         self.assertEqual(status.json["team_number"], 0)
+
+    def test_status_endpoint_returns_latest_targets(self):
+        class StubCamera:
+            error = ""
+
+            @staticmethod
+            def latest_targets():
+                return [Target("robot", 0.9, 10, 20, 30, 40)]
+
+        self.app.extensions["spy_glass"]["runtime"].camera = StubCamera()
+
+        status = self.client.get("/api/status")
+
+        self.assertEqual(status.json["targets"], [{
+            "label": "robot",
+            "confidence": 0.9,
+            "x": 10,
+            "y": 20,
+            "width": 30,
+            "height": 40,
+        }])
 
     def test_saves_valid_settings(self):
         response = self.client.post(
