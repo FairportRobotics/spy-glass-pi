@@ -1,21 +1,25 @@
-setup:
-	sudo apt update
-	sudo apt full-upgrade
-	sudo apt install imx500-all imx500-tools
-	sudo apt install python3-opencv python3-munkres
-	@echo "You might need to restart the raspberry pi."
-picamera:setup
-	cd ~;\
-	git clone https://github.com/raspberrypi/picamera2;\
-	cd ~/picamera2;\
-	pip install -e .  --break-system-packages
-model:picamera
-	imx500-package -i packerOut.zip -o .
-reefscape:
-	imx500-package -i reefscape.zip -o .
+PYTHON ?= python3
+VENV := .venv
+
+.PHONY: install install-service run test
+
+install:
+	sudo apt-get update
+	sudo apt-get install -y python3-venv python3-picamera2 python3-opencv imx500-all imx500-tools
+	$(PYTHON) -m venv --system-site-packages $(VENV)
+	$(VENV)/bin/pip install -r requirements.txt
+	mkdir -p models
+
+install-service:
+	sudo useradd --system --home-dir /opt/spy-glass --create-home --shell /usr/sbin/nologin spyglass
+	sudo chown -R spyglass:spyglass /opt/spy-glass
+	sudo install -d -o spyglass -g spyglass /var/lib/spy-glass
+	sudo cp deploy/spy-glass.service /etc/systemd/system/
+	sudo systemctl daemon-reload
+	sudo systemctl enable --now spy-glass
+
 run:
-	python demo.py --model network.rpk --fps 25 --bbox-normalization --ignore-dash-labels --bbox-order xy --labels labels.txt
-all:model
-	@echo "You spy glass model is ready!"
-clean:
-	rm -fr network.rpk
+	$(VENV)/bin/python -m spyglass
+
+test:
+	$(VENV)/bin/python -m unittest discover -s tests -v
